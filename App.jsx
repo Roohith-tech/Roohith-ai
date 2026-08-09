@@ -90,6 +90,7 @@ function App() {
   };
 
   // Modernized Custom Markdown Renderer Components Object
+    // Fully enforced block-level Markdown Renderer Components Object
   const markdownComponents = {
     code({ node, inline, className, children, ...props }) {
       const codeText = String(children).trim();
@@ -120,15 +121,18 @@ function App() {
       }
       return <code style={{ backgroundColor: '#2e2e38', padding: '2px 6px', borderRadius: '4px' }} {...props}>{children}</code>;
     },
-    h1: ({children}) => <h1 style={{ margin: '14px 0 6px 0', fontSize: '1.5rem', fontWeight: '700', color: '#ffffff' }}>{children}</h1>,
-    h2: ({children}) => <h2 style={{ margin: '12px 0 6px 0', fontSize: '1.3rem', fontWeight: '700', color: '#ffffff' }}>{children}</h2>,
-    h3: ({children}) => <h3 style={{ margin: '10px 0 4px 0', fontSize: '1.1rem', fontWeight: '700', color: '#ffffff' }}>{children}</h3>,
-    h4: ({children}) => <h4 style={{ margin: '8px 0 4px 0', fontSize: '1rem', fontWeight: '700', color: '#ffffff' }}>{children}</h4>,
-    p: ({children}) => <p style={{ margin: '0 0 10px 0', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{children}</p>,
-    ul: ({children}) => <ul style={{ margin: '0 0 12px 20px', paddingLeft: '5px', listStyleType: 'disc' }}>{children}</ul>,
-    ol: ({children}) => <ol style={{ margin: '0 0 12px 20px', paddingLeft: '5px' }}>{children}</ol>,
-    li: ({children}) => <li style={{ margin: '6px 0', lineHeight: '1.6' }}>{children}</li>,
-    strong: ({children}) => <strong style={{ fontWeight: '700', color: '#ffffff' }}>{children}</strong>
+    h1: ({children}) => <h1 style={{ display: 'block', margin: '16px 0 8px 0', fontSize: '1.5rem', fontWeight: '700', color: '#ffffff', clear: 'both' }}>{children}</h1>,
+    h2: ({children}) => <h2 style={{ display: 'block', margin: '14px 0 6px 0', fontSize: '1.3rem', fontWeight: '700', color: '#ffffff', clear: 'both' }}>{children}</h2>,
+    h3: ({children}) => <h3 style={{ display: 'block', margin: '12px 0 6px 0', fontSize: '1.1rem', fontWeight: '700', color: '#ffffff', clear: 'both' }}>{children}</h3>,
+    h4: ({children}) => <h4 style={{ display: 'block', margin: '10px 0 4px 0', fontSize: '1rem', fontWeight: '700', color: '#ffffff', clear: 'both' }}>{children}</h4>,
+    p: ({children}) => {
+      // Direct structural element breakdown injection hook patch 
+      return <div style={{ display: 'block', margin: '0 0 12px 0', lineHeight: '1.65', clear: 'both', width: '100%' }}>{children}</div>;
+    },
+    ul: ({children}) => <ul style={{ display: 'block', margin: '12px 0 12px 20px', paddingLeft: '5px', listStyleType: 'disc', clear: 'both' }}>{children}</ul>,
+    ol: ({children}) => <ol style={{ display: 'block', margin: '12px 0 12px 20px', paddingLeft: '5px', clear: 'both' }}>{children}</ol>,
+    li: ({children}) => <li style={{ display: 'list-item', margin: '8px 0', lineHeight: '1.6' }}>{children}</li>,
+    strong: ({children}) => <strong style={{ fontWeight: '700', color: '#ffffff', display: 'inline-block' }}>{children}</strong>
   };
 
   return (
