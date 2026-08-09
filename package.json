@@ -14,7 +14,8 @@
     "react-dom": "^18.3.1",
     "vite": "^5.4.1",
     "@vitejs/plugin-react": "^4.3.1",
-    "@google/genai": "latest"
+    "@google/genai": "latest",
+    "react-markdown": "^9.0.0"
   },
   "devDependencies": {
     "eslint": "^9.9.0",
