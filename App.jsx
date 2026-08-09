@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from '@google/genai';
 
-// Clean initialization using your provided Google AI Studio key
-const ai = new GoogleGenAI({ apiKey: 'AQ.Ab8RN6IADa9mc4B4gibg3wB2ulPOi-VhSgnr49S4WD85nft0GQ' });
+// Clean initialization using Vercel Environment Variables
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
 function App() {
   const [messages, setMessages] = useState([
