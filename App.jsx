@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from '@google/genai';
+import Markdown from 'react-markdown';
 
 // Clean initialization using Vercel Environment Variables
 const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
@@ -71,7 +72,7 @@ function App() {
         model: 'gemini-2.5-flash',
         contents: contents,
         config: {
-          systemInstruction: "Your name is RoohithAI. You are a highly advanced AI assistant created by Roohith and powered by Google models. When giving programming or scripting code answers, always wrap the code blocks using triple backticks like: ```javascript\\ncode here\\n``` so they format nicely."
+          systemInstruction: "Your name is RoohithAI. You are a highly advanced AI assistant created by Roohith and powered by Google models."
         }
       });
 
@@ -88,18 +89,17 @@ function App() {
     }
   };
 
-  // Upgraded parser to split text into rich blocks, bold strings (**text**), and clean code containers
-  const renderMessageText = (text) => {
-    const parts = text.split(/(```[\s\S]*?```)/g);
-    return parts.map((part, index) => {
-      // Handle Code Blocks
-      if (part.startsWith('```')) {
-        const match = part.match(/```(\w*)\n([\s\S]*?)```/);
-        const language = match ? match[1] : 'code';
-        const codeText = match ? match[2].trim() : part.slice(3, -3).trim();
+  // Modernized Custom Markdown Renderer Components Object
+  const markdownComponents = {
+    // Intercept default rendering blocks to injection code wrapper blocks
+    code({ node, inline, className, children, ...props }) {
+      const codeText = String(children).trim();
+      const match = /language-(\w+)/.exec(className || '');
+      const language = match ? match[1] : 'code';
 
+      if (!inline) {
         return (
-          <div key={index} style={styles.codeContainer}>
+          <div style={styles.codeContainer}>
             <div style={styles.codeHeader}>
               <span style={styles.codeLang}>{language}</span>
               <button 
@@ -114,25 +114,24 @@ function App() {
               </button>
             </div>
             <pre style={styles.codePre}>
-              <code>{codeText}</code>
+              <code {...props}>{children}</code>
             </pre>
           </div>
         );
       }
-      
-      // Handle Inline Bold Strings (**bold**)
-      const boldParts = part.split(/(\*\*[\s\S]*?\*\*)/g);
-      return (
-        <span key={index}>
-          {boldParts.map((subPart, subIndex) => {
-            if (subPart.startsWith('**') && subPart.endsWith('**')) {
-              return <strong key={subIndex} style={{ fontWeight: '700', color: '#ffffff' }}>{subPart.slice(2, -2)}</strong>;
-            }
-            return <span key={subIndex}>{subPart}</span>;
-          })}
-        </span>
-      );
-    });
+      return <code style={{ backgroundColor: '#2e2e38', padding: '2px 6px', borderRadius: '4px' }} {...props}>{children}</code>;
+    },
+    // Make headers cleanly break down without squishing lines
+    h1: ({children}) => <h1 style={{ margin: '14px 0 6px 0', fontSize: '1.5rem', fontWeight: '700', color: '#ffffff' }}>{children}</h1>,
+    h2: ({children}) => <h2 style={{ margin: '12px 0 6px 0', fontSize: '1.3rem', fontWeight: '700', color: '#ffffff' }}>{children}</h2>,
+    h3: ({children}) => <h3 style={{ margin: '10px 0 4px 0', fontSize: '1.1rem', fontWeight: '700', color: '#ffffff' }}>{children}</h3>,
+    h4: ({children}) => <h4 style={{ margin: '8px 0 4px 0', fontSize: '1rem', fontWeight: '700', color: '#ffffff' }}>{children}</h4>,
+    // Fix native markdown blocks into formatted standard breaks
+    p: ({children}) => <p style={{ margin: '0 0 10px 0', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{children}</p>,
+    ul: ({children}) => <ul style={{ margin: '0 0 10px 20px', paddingLeft: '5px' }}>{children}</ul>,
+    ol: ({children}) => <ol style={{ margin: '0 0 10px 20px', paddingLeft: '5px' }}>{children}</ol>,
+    li: ({children}) => <li style={{ margin: '4px 0', lineHeight: '1.5' }}>{children}</li>,
+    strong: ({children}) => <strong style={{ fontWeight: '700', color: '#ffffff' }}>{children}</strong>
   };
 
   return (
@@ -170,7 +169,8 @@ function App() {
                 color: '#f3f4f6',
                 maxWidth: msg.role === 'user' ? '70%' : '85%',
               }}>
-                {renderMessageText(msg.text)}
+                {/* Advanced Markdown rendering core injection element layout mapping link hooks */}
+                <Markdown components={markdownComponents}>{msg.text}</Markdown>
               </div>
             </div>
           ))}
@@ -221,7 +221,7 @@ function App() {
   );
 }
 
-// Fixed styling object
+// Complete inline layout styles definition matching original workspace structure
 const styles = {
   container: {
     display: 'flex',
@@ -248,148 +248,148 @@ const styles = {
     alignItems: 'center',
     gap: '12px',
     marginBottom: '24px',
-    padding: '4px',
   },
   logoImage: {
-    width: '42px',
-    height: '42px',
+    width: '36px',
+    height: '36px',
     borderRadius: '50%',
     objectFit: 'cover',
-    border: '1.5px solid #ff1e27',
-    boxShadow: '0 0 15px rgba(255, 30, 39, 0.7)',
   },
   brandName: {
-    fontSize: '20px',
-    fontWeight: '600',
+    fontSize: '1.25rem',
+    fontWeight: '700',
+    letterSpacing: '-0.025em',
     margin: 0,
-    letterSpacing: '-0.5px',
   },
   newChatBtn: {
-    backgroundColor: '#1e1e2e',
-    color: '#ffffff',
-    border: '1px solid #3f3f56',
+    width: '100%',
+    padding: '10px',
+    backgroundColor: '#1c1c24',
+    border: '1px solid #2e2e3d',
     borderRadius: '8px',
-    padding: '10px 16px',
+    color: '#ffffff',
+    fontWeight: '600',
     cursor: 'pointer',
     textAlign: 'left',
-    fontSize: '14px',
     transition: 'background-color 0.2s',
   },
   chatArea: {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
+    height: '100%',
     position: 'relative',
+    backgroundColor: '#0c0c12',
   },
   messageContainer: {
     flex: 1,
+    padding: '24px 24px 100px 24px',
     overflowY: 'auto',
-    padding: '24px',
     display: 'flex',
     flexDirection: 'column',
     gap: '16px',
-  },
-  messageRow: {
+  }
+    messageRow: {
     display: 'flex',
     width: '100%',
   },
   messageBubble: {
-    padding: '12px 16px',
+    padding: '14px 18px',
     borderRadius: '12px',
-    fontSize: '15px',
-    lineHeight: '1.6',
-    boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+    fontSize: '0.975rem',
+    lineHeight: '1.5',
+    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+    wordBreak: 'break-word',
+  },
+  inputForm: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: '100%',
+    padding: '24px',
+    background: 'linear-gradient(transparent, #0c0c12 30%)',
+  },
+  inputWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    maxWidth: '800px',
+    margin: '0 auto',
+    backgroundColor: '#16161f',
+    border: '1px solid #2a2a3a',
+    borderRadius: '24px',
+    padding: '6px 12px 6px 18px',
+    gap: '8px',
+  },
+  textInput: {
+    flex: 1,
+    background: 'transparent',
+    border: 'none',
+    outline: 'none',
+    fontSize: '1rem',
+    padding: '8px 0',
+  },
+  micButton: {
+    background: 'transparent',
+    border: 'none',
+    fontSize: '1.25rem',
+    cursor: 'pointer',
+    padding: '6px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '38px',
+    height: '38px',
+  },
+  sendButton: {
+    backgroundColor: '#ffffff',
+    color: '#000000',
+    border: 'none',
+    width: '36px',
+    height: '36px',
+    borderRadius: '50%',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '1rem',
+    fontWeight: 'bold',
   },
   codeContainer: {
-    backgroundColor: '#050507',
-    borderRadius: '8px',
-    border: '1px solid #2e2e3f',
     margin: '12px 0',
+    borderRadius: '8px',
     overflow: 'hidden',
+    border: '1px solid #2e2e3d',
+    backgroundColor: '#050507',
   },
   codeHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#14141f',
     padding: '8px 14px',
-    borderBottom: '1px solid #2e2e3f',
+    backgroundColor: '#14141b',
+    borderBottom: '1px solid #2e2e3d',
   },
   codeLang: {
-    fontSize: '12px',
+    fontSize: '0.8rem',
     color: '#9ca3af',
     textTransform: 'uppercase',
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
-    copyButton: {
+  copyButton: {
     backgroundColor: 'transparent',
     border: 'none',
-    color: '#38bdf8',
+    color: '#3b82f6',
     cursor: 'pointer',
-    fontSize: '12px',
-    fontWeight: '500',
+    fontSize: '0.8rem',
+    fontWeight: '600',
   },
   codePre: {
     margin: 0,
     padding: '14px',
     overflowX: 'auto',
-    fontFamily: 'Fira Code, Courier New, monospace',
-    fontSize: '14px',
-    color: '#e5e7eb',
-  },
-  inputForm: {
-    padding: '24px',
-    background: 'linear-gradient(180deg, rgba(11,11,15,0) 0%, #0b0b0f 50%)',
-  },
-  inputWrapper: {
-    maxWidth: '768px',
-    margin: '0 auto',
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-    backgroundColor: '#1e1e24',
-    borderRadius: '14px',
-    border: '1px solid #3f3f4e',
-    padding: '6px 12px',
-  },
-  textInput: {
-    flex: 1,
-    backgroundColor: 'transparent',
-    border: 'none',
-    padding: '10px 80px 10px 8px',
-    fontSize: '15px',
-    outline: 'none',
-  },
-  micButton: {
-    position: 'absolute',
-    right: '52px',
-    backgroundColor: 'transparent',
-    border: 'none',
-    fontSize: '18px',
-    cursor: 'pointer',
-    width: '32px',
-    height: '32px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: '50%',
-  },
-  sendButton: {
-    position: 'absolute',
-    right: '12px',
-    backgroundColor: '#ffffff',
-    color: '#0b0b0f',
-    border: 'none',
-    borderRadius: '8px',
-    width: '32px',
-    height: '32px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontWeight: 'bold',
-  },
+    backgroundColor: '#050507',
+  }
 };
 
 export default App;
-
