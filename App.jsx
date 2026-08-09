@@ -72,7 +72,7 @@ function App() {
         model: 'gemini-2.5-flash',
         contents: contents,
         config: {
-          systemInstruction: systemInstruction: "Your name is RoohithAI. You are a highly advanced AI assistant created by Roohith and powered by Google models. CRITICAL RULES FOR LAYOUT: Whenever you list items, steps, ingredients, or parts, you MUST use strict markdown bullet points. Start each pointer on a completely brand new line using an asterisk followed by a space (e.g., '\\n* Item 1\\n* Item 2'). Never group multiple bullet points or numbered lists together in a single paragraph block."
+          systemInstruction: "Your name is RoohithAI. You are a highly advanced AI assistant created by Roohith and powered by Google models. Always split distinct thoughts, line items, lists, headings, and pointers into clean new line structures."
         }
       });
 
@@ -91,7 +91,6 @@ function App() {
 
   // Modernized Custom Markdown Renderer Components Object
   const markdownComponents = {
-    // Intercept default rendering blocks to injection code wrapper blocks
     code({ node, inline, className, children, ...props }) {
       const codeText = String(children).trim();
       const match = /language-(\w+)/.exec(className || '');
@@ -121,16 +120,14 @@ function App() {
       }
       return <code style={{ backgroundColor: '#2e2e38', padding: '2px 6px', borderRadius: '4px' }} {...props}>{children}</code>;
     },
-    // Make headers cleanly break down without squishing lines
     h1: ({children}) => <h1 style={{ margin: '14px 0 6px 0', fontSize: '1.5rem', fontWeight: '700', color: '#ffffff' }}>{children}</h1>,
     h2: ({children}) => <h2 style={{ margin: '12px 0 6px 0', fontSize: '1.3rem', fontWeight: '700', color: '#ffffff' }}>{children}</h2>,
     h3: ({children}) => <h3 style={{ margin: '10px 0 4px 0', fontSize: '1.1rem', fontWeight: '700', color: '#ffffff' }}>{children}</h3>,
     h4: ({children}) => <h4 style={{ margin: '8px 0 4px 0', fontSize: '1rem', fontWeight: '700', color: '#ffffff' }}>{children}</h4>,
-    // Fix native markdown blocks into formatted standard breaks
     p: ({children}) => <p style={{ margin: '0 0 10px 0', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{children}</p>,
-    ul: ({children}) => <ul style={{ margin: '0 0 10px 20px', paddingLeft: '5px' }}>{children}</ul>,
-    ol: ({children}) => <ol style={{ margin: '0 0 10px 20px', paddingLeft: '5px' }}>{children}</ol>,
-    li: ({children}) => <li style={{ margin: '4px 0', lineHeight: '1.5' }}>{children}</li>,
+    ul: ({children}) => <ul style={{ margin: '0 0 12px 20px', paddingLeft: '5px', listStyleType: 'disc' }}>{children}</ul>,
+    ol: ({children}) => <ol style={{ margin: '0 0 12px 20px', paddingLeft: '5px' }}>{children}</ol>,
+    li: ({children}) => <li style={{ margin: '6px 0', lineHeight: '1.6' }}>{children}</li>,
     strong: ({children}) => <strong style={{ fontWeight: '700', color: '#ffffff' }}>{children}</strong>
   };
 
@@ -169,8 +166,13 @@ function App() {
                 color: '#f3f4f6',
                 maxWidth: msg.role === 'user' ? '70%' : '85%',
               }}>
-                {/* Advanced Markdown rendering core injection element layout mapping link hooks */}
-                <Markdown components={markdownComponents}>{msg.text}</Markdown>
+                {/* Fixed Pre-processing Markdown injection point to separate bullet chains cleanly */}
+                <Markdown components={markdownComponents}>
+                  {msg.text
+                    .replace(/\n/g, '\n\n')
+                    .replace(/\*\s/g, '\n* ')
+                    .replace(/###\s/g, '\n### ')}
+                </Markdown>
               </div>
             </div>
           ))}
@@ -285,11 +287,11 @@ const styles = {
     flex: 1,
     padding: '24px 24px 100px 24px',
     overflowY: 'auto',
-    display: 'flex',
+        display: 'flex',
     flexDirection: 'column',
     gap: '16px',
-  }
-    messageRow: {
+  },
+  messageRow: {
     display: 'flex',
     width: '100%',
   },
@@ -393,3 +395,4 @@ const styles = {
 };
 
 export default App;
+
