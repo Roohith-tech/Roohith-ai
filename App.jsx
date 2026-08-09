@@ -299,14 +299,15 @@ const styles = {
     display: 'flex',
     width: '100%',
   },
-  messageBubble: {
+    messageBubble: {
     padding: '14px 18px',
     borderRadius: '12px',
-    fontSize: '0.9rem',
-    lineHeight: '1.5',
+    fontSize: '0.9rem', // Reduced from 0.975rem for a sleeker look
+    lineHeight: '1.6',
     boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
     wordBreak: 'break-word',
   },
+  
   inputForm: {
     position: 'absolute',
     bottom: 0,
