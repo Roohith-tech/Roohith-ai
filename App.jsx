@@ -302,7 +302,7 @@ const styles = {
   messageBubble: {
     padding: '14px 18px',
     borderRadius: '12px',
-    fontSize: '0.975rem',
+    fontSize: '0.9rem',
     lineHeight: '1.5',
     boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
     wordBreak: 'break-word',
