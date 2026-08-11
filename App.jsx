@@ -56,7 +56,7 @@ function App() {
       <div className="chat-area">
         {messages.map((msg, index) => (
           <div key={index} className={`message-bubble ${msg.role}-bubble`}>
-            <strong>{msg.role === 'user' ? 'You:' : 'RoohithAI:'}</strong>
+            <strong>{msg.role === 'user' ? 'You' : 'RoohithAI'}:</strong>
             <div className="message-text">{msg.text}</div>
           </div>
         ))}
@@ -64,16 +64,16 @@ function App() {
         <div ref={chatEndRef} />
       </div>
 
-      {/* ⌨️ MULTI-DEVICE INPUT FOOTER */}
+      {/* ⌨️ ORIGINAL BOTTOM INPUT FORM ACCORDING TO YOUR FIRST STYLE */}
       <footer className="input-footer">
-        <div className="input-row">
+        <div className="input-block">
           <textarea 
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask a question... (Press Enter to send)"
             disabled={loading}
-            rows={1}
+            rows={2}
           />
           <button onClick={handleAskAI} disabled={loading} className="send-btn">
             Send
