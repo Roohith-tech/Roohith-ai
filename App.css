@@ -182,3 +182,22 @@
     border-right-color: var(--border);
   }
 }
+
+/* 🌍 GLOBAL RESPONSIVE SCALING ADDED TO FIXED SIZES Below */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden; /* Stops horizontal page stretching on mobile screens */
+}
+
+/* Make sure elements stay safely responsive on touch screens */
+@media (max-width: 600px) {
+  textarea {
+    font-size: 16px !important; /* Forces Safari and Chrome mobile to stop zooming when typing */
+    max-width: 100% !important;
+  }
+}
