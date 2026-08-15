@@ -1,5 +1,47 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+// REMOVE the GoogleGenerativeAI import completely from this file!
+
+export default function App() {
+  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const handleSendMessage = async () => {
+    if (!input.trim()) return;
+
+    // Show what the user wrote immediately
+    setMessages(prev => [...prev, { role: 'user', text: input }]);
+    setInput('');
+    setLoading(true);
+
+    try {
+      // Talk directly to your local Vercel back-end endpoint route
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: input }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'The server encountered an error.');
+      }
+
+      // Add the AI's reply text to the screen
+      setMessages(prev => [...prev, { role: 'model', text: data.text }]);
+
+    } catch (err) {
+      console.error("Chat Execution Error:", err);
+      setMessages(prev => [...prev, { role: 'model', text: `Error: ${err.message}` }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ... rest of your layout rendering interface JSX code
+}
+
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
