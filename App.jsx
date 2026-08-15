@@ -1,42 +1,14 @@
-// 1. Move initialization inside a safe function or verify it
-import { GoogleGenAI } from '@google/genai';
+import React, { useState, useRef, useEffect } from 'react';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-// If the key is empty/undefined, the new SDK can crash immediately
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
-// 2. Wrap your chat submit handler in a try/catch safety net
-const handleSendMessage = async () => {
-  if (!input.trim()) return;
-  
-  // Clear input and show a temporary loading state
-  setMessages(prev => [...prev, { role: 'user', text: input }]);
-  setInput('');
-  setLoading(true);
-
-  try {
-    if (!ai) {
-      throw new Error("API Key is completely missing! Check your .env file setup.");
-    }
-
-    // Call the correct, updated SDK method structure
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash', // Make sure you are using a valid model name
-      contents: input,
-    });
-
-    const replyText = response.text || "No response text found.";
-    setMessages(prev => [...prev, { role: 'model', text: replyText }]);
-
-  } catch (err) {
-    console.error("Gemini Error:", err);
-    // This updates the chat screen with the real error message so you can read it!
-    setMessages(prev => [...prev, { role: 'model', text: `Error: ${err.message}` }]);
-  } finally {
-    setLoading(false);
-  }
-};
-
+// 1. Setup the Gemini AI configuration globally
+const genAI = new GoogleGenerativeAI(apiKey);
+const model = genAI.getGenerativeModel({ 
+  model: "gemini-1.5-flash",
+  systemInstruction: "Your name is RoohithAI. You are a highly advanced AI assistant created by Roohith and powered by Google models. When giving programming or scripting code answers, always wrap the code blocks using triple backticks like: ```javascript\ncode here\n``` so they format nicely."
+});
 
 function App() {
   const [messages, setMessages] = useState([
@@ -48,7 +20,7 @@ function App() {
   const chatEndRef = useRef(null);
   const recognitionRef = useRef(null);
 
-  // Initialize Speech Recognition on Mount
+  // 2. Initialize Speech Recognition on Mount
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -68,11 +40,12 @@ function App() {
     }
   }, []);
 
-  // Smooth scroll handler to lock view on incoming messages
+  // 3. Smooth scroll handler to lock view on incoming messages
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
+  // 4. Voice Input Toggle Handler
   const toggleVoiceInput = () => {
     if (!recognitionRef.current) {
       alert("Voice input is not supported in this browser. Try Google Chrome!");
@@ -85,6 +58,7 @@ function App() {
     }
   };
 
+  // 5. Submit Message to Gemini API Handler
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
@@ -95,21 +69,19 @@ function App() {
     setLoading(true);
 
     try {
+      // Map chat history to the structure Gemini accepts
       const contents = messages.map(msg => ({
         role: msg.role,
         parts: [{ text: msg.text }]
       }));
       contents.push({ role: 'user', parts: [{ text: userMessage }] });
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: contents,
-        config: {
-          systemInstruction: "Your name is RoohithAI. You are a highly advanced AI assistant created by Roohith and powered by Google models. When giving programming or scripting code answers, always wrap the code blocks using triple backticks like: ```javascript\\ncode here\\n``` so they format nicely."
-        }
+      // Call generateContent using the correct model reference
+      const responseResult = await model.generateContent({
+        contents: contents
       });
 
-      const replyText = response.text || "I couldn't process that response.";
+      const replyText = responseResult.response.text() || "I couldn't process that response.";
       setMessages((prev) => [...prev, { role: 'model', text: replyText }]);
     } catch (error) {
       console.error("AI Generation Error:", error);
@@ -121,8 +93,7 @@ function App() {
       setLoading(false);
     }
   };
-
-  // Upgraded parser to split text into rich blocks, bold strings (**text**), and clean code containers
+  // 6. Upgraded parser to split text into rich blocks, bold strings (**text**), and clean code containers
   const renderMessageText = (text) => {
     const parts = text.split(/(```[\s\S]*?```)/g);
     return parts.map((part, index) => {
@@ -178,7 +149,7 @@ function App() {
             src="/shadow.jpg" 
             alt="Shadow Logo" 
             style={styles.logoImage} 
-            onError={(e) => { e.target.src = '/shadow.jpg.jpg'; }}
+            onError={(e) => { e.target.src = '/shadow.jpg'; }}
           />
           <h1 style={styles.brandName}>RoohithAI</h1>
         </div>
@@ -255,7 +226,7 @@ function App() {
   );
 }
 
-// Fixed styling object
+// Fixed styling object with flexbox alignment for inputs
 const styles = {
   container: {
     display: 'flex',
@@ -276,6 +247,7 @@ const styles = {
     flexDirection: 'column',
     padding: '16px',
     borderRight: '1px solid #1f1f2e',
+    boxSizing: 'border-box',
   },
   logoContainer: {
     display: 'flex',
@@ -314,6 +286,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     position: 'relative',
+    height: '100%',
   },
   messageContainer: {
     flex: 1,
@@ -355,7 +328,7 @@ const styles = {
     textTransform: 'uppercase',
     fontWeight: 'bold',
   },
-    copyButton: {
+  copyButton: {
     backgroundColor: 'transparent',
     border: 'none',
     color: '#38bdf8',
@@ -378,25 +351,23 @@ const styles = {
   inputWrapper: {
     maxWidth: '768px',
     margin: '0 auto',
-    position: 'relative',
     display: 'flex',
     alignItems: 'center',
     backgroundColor: '#1e1e24',
     borderRadius: '14px',
     border: '1px solid #3f3f4e',
     padding: '6px 12px',
+    gap: '8px',
   },
   textInput: {
     flex: 1,
     backgroundColor: 'transparent',
     border: 'none',
-    padding: '10px 80px 10px 8px',
+    padding: '10px 8px',
     fontSize: '15px',
     outline: 'none',
   },
   micButton: {
-    position: 'absolute',
-    right: '52px',
     backgroundColor: 'transparent',
     border: 'none',
     fontSize: '18px',
@@ -407,10 +378,9 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: '50%',
+    flexShrink: 0,
   },
   sendButton: {
-    position: 'absolute',
-    right: '12px',
     backgroundColor: '#ffffff',
     color: '#0b0b0f',
     border: 'none',
@@ -422,6 +392,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: 'bold',
+    flexShrink: 0,
   },
 };
 
