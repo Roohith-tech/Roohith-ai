@@ -1,56 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-// REMOVE the GoogleGenerativeAI import completely from this file!
-
-export default function App() {
-  const [input, setInput] = useState('');
-  const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const handleSendMessage = async () => {
-    if (!input.trim()) return;
-
-    // Show what the user wrote immediately
-    setMessages(prev => [...prev, { role: 'user', text: input }]);
-    setInput('');
-    setLoading(true);
-
-    try {
-      // Talk directly to your local Vercel back-end endpoint route
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input }),
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'The server encountered an error.');
-      }
-
-      // Add the AI's reply text to the screen
-      setMessages(prev => [...prev, { role: 'model', text: data.text }]);
-
-    } catch (err) {
-      console.error("Chat Execution Error:", err);
-      setMessages(prev => [...prev, { role: 'model', text: `Error: ${err.message}` }]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ... rest of your layout rendering interface JSX code
-}
-
+// 1. Fixed the import name here:
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
-// 1. Setup the Gemini AI configuration globally
+// 2. Fixed the setup name here:
 const genAI = new GoogleGenerativeAI(apiKey);
-const model = genAI.getGenerativeModel({ 
-  model: "gemini-1.5-flash",
-  systemInstruction: "Your name is RoohithAI. You are a highly advanced AI assistant created by Roohith and powered by Google models. When giving programming or scripting code answers, always wrap the code blocks using triple backticks like: ```javascript\ncode here\n``` so they format nicely."
-});
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 function App() {
   const [messages, setMessages] = useState([
@@ -62,7 +18,7 @@ function App() {
   const chatEndRef = useRef(null);
   const recognitionRef = useRef(null);
 
-  // 2. Initialize Speech Recognition on Mount
+  // Initialize Speech Recognition on Mount
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -82,12 +38,11 @@ function App() {
     }
   }, []);
 
-  // 3. Smooth scroll handler to lock view on incoming messages
+  // Smooth scroll handler to lock view on incoming messages
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  // 4. Voice Input Toggle Handler
   const toggleVoiceInput = () => {
     if (!recognitionRef.current) {
       alert("Voice input is not supported in this browser. Try Google Chrome!");
@@ -100,7 +55,6 @@ function App() {
     }
   };
 
-  // 5. Submit Message to Gemini API Handler
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
@@ -111,19 +65,21 @@ function App() {
     setLoading(true);
 
     try {
-      // Map chat history to the structure Gemini accepts
       const contents = messages.map(msg => ({
         role: msg.role,
         parts: [{ text: msg.text }]
       }));
       contents.push({ role: 'user', parts: [{ text: userMessage }] });
 
-      // Call generateContent using the correct model reference
-      const responseResult = await model.generateContent({
-        contents: contents
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: contents,
+        config: {
+          systemInstruction: "Your name is RoohithAI. You are a highly advanced AI assistant created by Roohith and powered by Google models. When giving programming or scripting code answers, always wrap the code blocks using triple backticks like: ```javascript\\ncode here\\n``` so they format nicely."
+        }
       });
 
-      const replyText = responseResult.response.text() || "I couldn't process that response.";
+      const replyText = response.text || "I couldn't process that response.";
       setMessages((prev) => [...prev, { role: 'model', text: replyText }]);
     } catch (error) {
       console.error("AI Generation Error:", error);
@@ -135,7 +91,8 @@ function App() {
       setLoading(false);
     }
   };
-  // 6. Upgraded parser to split text into rich blocks, bold strings (**text**), and clean code containers
+
+  // Upgraded parser to split text into rich blocks, bold strings (**text**), and clean code containers
   const renderMessageText = (text) => {
     const parts = text.split(/(```[\s\S]*?```)/g);
     return parts.map((part, index) => {
@@ -191,7 +148,7 @@ function App() {
             src="/shadow.jpg" 
             alt="Shadow Logo" 
             style={styles.logoImage} 
-            onError={(e) => { e.target.src = '/shadow.jpg'; }}
+            onError={(e) => { e.target.src = '/shadow.jpg.jpg'; }}
           />
           <h1 style={styles.brandName}>RoohithAI</h1>
         </div>
@@ -268,7 +225,7 @@ function App() {
   );
 }
 
-// Fixed styling object with flexbox alignment for inputs
+// Fixed styling object
 const styles = {
   container: {
     display: 'flex',
@@ -289,7 +246,6 @@ const styles = {
     flexDirection: 'column',
     padding: '16px',
     borderRight: '1px solid #1f1f2e',
-    boxSizing: 'border-box',
   },
   logoContainer: {
     display: 'flex',
@@ -328,7 +284,6 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     position: 'relative',
-    height: '100%',
   },
   messageContainer: {
     flex: 1,
@@ -370,7 +325,7 @@ const styles = {
     textTransform: 'uppercase',
     fontWeight: 'bold',
   },
-  copyButton: {
+    copyButton: {
     backgroundColor: 'transparent',
     border: 'none',
     color: '#38bdf8',
@@ -393,23 +348,25 @@ const styles = {
   inputWrapper: {
     maxWidth: '768px',
     margin: '0 auto',
+    position: 'relative',
     display: 'flex',
     alignItems: 'center',
     backgroundColor: '#1e1e24',
     borderRadius: '14px',
     border: '1px solid #3f3f4e',
     padding: '6px 12px',
-    gap: '8px',
   },
   textInput: {
     flex: 1,
     backgroundColor: 'transparent',
     border: 'none',
-    padding: '10px 8px',
+    padding: '10px 80px 10px 8px',
     fontSize: '15px',
     outline: 'none',
   },
   micButton: {
+    position: 'absolute',
+    right: '52px',
     backgroundColor: 'transparent',
     border: 'none',
     fontSize: '18px',
@@ -420,9 +377,10 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: '50%',
-    flexShrink: 0,
   },
   sendButton: {
+    position: 'absolute',
+    right: '12px',
     backgroundColor: '#ffffff',
     color: '#0b0b0f',
     border: 'none',
@@ -434,8 +392,8 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: 'bold',
-    flexShrink: 0,
   },
 };
 
 export default App;
+
