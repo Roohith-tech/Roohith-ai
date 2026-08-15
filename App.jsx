@@ -1,8 +1,42 @@
-import React, { useState, useRef, useEffect } from 'react';
+// 1. Move initialization inside a safe function or verify it
 import { GoogleGenAI } from '@google/genai';
 
-// Clean initialization using your provided Google AI Studio key
-const ai = new GoogleGenAI({ apiKey: 'AQ.Ab8RN6IADa9mc4B4gibg3wB2ulPOi-VhSgnr49S4WD85nft0GQ' });
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+// If the key is empty/undefined, the new SDK can crash immediately
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+
+// 2. Wrap your chat submit handler in a try/catch safety net
+const handleSendMessage = async () => {
+  if (!input.trim()) return;
+  
+  // Clear input and show a temporary loading state
+  setMessages(prev => [...prev, { role: 'user', text: input }]);
+  setInput('');
+  setLoading(true);
+
+  try {
+    if (!ai) {
+      throw new Error("API Key is completely missing! Check your .env file setup.");
+    }
+
+    // Call the correct, updated SDK method structure
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash', // Make sure you are using a valid model name
+      contents: input,
+    });
+
+    const replyText = response.text || "No response text found.";
+    setMessages(prev => [...prev, { role: 'model', text: replyText }]);
+
+  } catch (err) {
+    console.error("Gemini Error:", err);
+    // This updates the chat screen with the real error message so you can read it!
+    setMessages(prev => [...prev, { role: 'model', text: `Error: ${err.message}` }]);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
 function App() {
   const [messages, setMessages] = useState([
